@@ -297,86 +297,23 @@
       ((or (null? l1) (null? l2)) #f)
       (else (and (equal? (car l1) (car l2)) (eqlist? (cdr l1) (cdr l2)))))))
 
-; -------- chapter 6 ----------
-
-(quote a)
-(quote +)
-(quote x)
-(eq? (quote 'a) 'a) ; #f
-(eq? (quote a) 'a) ; #t
-
-;(define numbered?
-;  (lambda (exp)
-;    (cond
-;      ((atom? exp) (number? exp))
-;      ((eq? (car (cdr exp)) '+) (and (numbered? (car exp)) (numbered? (car (cdr (cdr exp)))))) ; we know there are two elements... potentially separated by a plus sign. If the middle element is a plus sign, check that what's on either side is numbered
-;      ((eq? (car (cdr exp)) 'x) (and (numbered? (car exp)) (numbered? (car (cdr (cdr exp)))))) ; same logic as plus sign but for x
-;      ((eq? (car (cdr exp)) '^) (and (numbered? (car exp)) (numbered? (car (cdr (cdr exp)))))) ; same logic as plus sign but for ^
-;      (else #f))))
-
-;(numbered? '(3 + 5))
-
-; simplifying numbered?
-;(define numbered?
-;  (lambda (exp)
-;    (cond
-;      ((atom? exp) (number? exp))
-;      ((or(or (eq? (car (cdr exp)) '+) (eq? (car (cdr exp)) 'x))(eq? (car (cdr exp)) '^)) (and (numbered? (car exp)) (numbered? (car (cdr (cdr exp)))))) 
-;      (else #f))))
-
-; simplifying again...
 (define numbered?
   (lambda (exp)
     (cond
       ((atom? exp) (number? exp))
       (else (and (numbered? (car exp)) (numbered? (car (cdr (cdr exp)))))))))
-
-(numbered? '(3 + 5))
-
-
-;(define value
-;  (lambda (exp)
-;    (cond
-;      ((atom? exp) exp )
-;      ((eq? (car (cdr exp)) '+) (+ (value (car exp)) (value (car (cdr (cdr exp))))))
-;      ((eq? (car (cdr exp)) '*) (* (value (car exp)) (value (car (cdr (cdr exp))))))
-;      (else (expt (value (car exp)) (value (car (cdr (cdr exp)))))))))
-
-;(value '(1 + (3 * 4)))
-
-; try to rewrite value for a new kind of arithmetic expression that is either:
-; - a number
-; - a list of the atom + followed by two arithmetic expressions
-; - a list of the atom x followed by two arithmetic expressions
-; - a list of the atom ^ followed by two arithmetic expressions
-
-;(define value
-;  (lambda (exp)
-;    (cond
-;      ((atom? exp) exp)
-;      ((eq? (car exp) '+) (+ (value (car (cdr exp))) (value (car (cdr (cdr exp))))))
-;      ((eq? (car exp) '*) (* (value (car (cdr exp))) (value (car (cdr (cdr exp))))))
-;      (else (expt (value (car (cdr exp))) (value (car (cdr (cdr exp)))))))))
-
-;(value '(+ 1 3))
-                                        
+                   
 (define pre-first-sub-exp
   (lambda (exp)
     (car (cdr exp))))
-
-(pre-first-sub-exp '(+ 1 3))
 
 (define second-sub-exp
   (lambda (exp)
     (car (cdr (cdr exp)))))
 
-(second-sub-exp '(+ 1 3))
-
 (define pre-operator
   (lambda (exp)
     (car exp)))
-
-(pre-operator '(+ 1 3))
 
 ; rewrite value with these new helper methods
 (define value
@@ -387,8 +324,6 @@
       ((eq? (pre-operator exp) '*) (* (pre-first-sub-exp exp) (second-sub-exp exp)))
       (else (expt (pre-first-sub-exp exp) (second-sub-exp exp))))))
 
-(value '(+ 1 3))
-
 ; use this value function for the first representatio of arithmetic expressions
 ; answer: change the definitions of first-sub-exp and operator to be reversed for inline evaluation
                                         
@@ -396,13 +331,9 @@
   (lambda (exp)
     (car exp)))
 
-(in-first-sub-exp '(+ 1 3))
-
 (define in-operator
   (lambda (exp)
     (car (cdr exp))))
-
-(in-operator '(+ 1 3))
 
 (define in-value
   (lambda (exp)
@@ -412,30 +343,18 @@
       ((eq? (in-operator exp) '*) (* (in-first-sub-exp exp) (second-sub-exp exp)))
       (else (expt (in-first-sub-exp exp) (second-sub-exp exp))))))
 
-(in-value '(1 + 3))
-
-; numbers as abstract representations...
-
 (define rep-zero?
   (lambda (exp)
     (null? exp)))
-
-(rep-zero? '())
-(rep-zero? '(()))
 
 (define rep-add1
   (lambda (exp)
     (cons (quote ()) exp)))
 
-(rep-add1 '())
-(rep-add1 '(()))
-
 (define rep-sub1
   (lambda (exp)
     (cdr exp)))
 
-; (rep-sub1 '()) -- can't be done because of law of cdr... needs to have one element in the list
-(rep-sub1 '(()))
 
 (define rep-plus
   (lambda (a b)
@@ -443,5 +362,71 @@
       ((rep-zero? b) a)
       (else (rep-add1 (rep-plus a (rep-sub1 b)))))))
 
-(rep-plus '(()) '())
-(rep-plus '(() ()) '(()))
+
+
+; --- chapter 7 ---
+
+(define set?
+  (lambda (lat)
+    (cond
+      ((null? lat) #t)
+      ((member? (car lat) (cdr lat)) #f)
+      (else (set? (cdr lat))))))
+
+(set? '(apple peaches apple plum))
+(set? '(apple peaches pears plum))
+(set? '(apple 3 pear 4 9 apple 3 4))
+
+;(define makeset
+;  (lambda (lat)
+;    (cond
+;      ((null? lat) (quote ()))
+;      ((member? (car lat) (cdr lat)) (makeset (cdr lat)))
+;      (else (cons (car lat) (makeset (cdr lat)))))))
+
+(define makeset
+  (lambda (lat)
+    (cond
+      ((null? lat) (quote ()))
+      (else (cons (car lat) (makeset (multirember (car lat) (cdr lat))))))))
+
+(makeset '(apple peach pear peach plum apple lemon peach))
+(makeset '(apple 3 pear 4 9 apple 3 4))
+
+;(define subset?
+;  (lambda (set1 set2)
+;    (cond
+;      ((null? set1) #t)
+;      ((member? (car set1) set2) (subset? (cdr set1) set2))
+;      (else #f))))
+
+(define subset?
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) #t)
+      (else (and (member? (car set1) set2) (subset? (cdr set1) set2))))))
+
+(subset? '(5 chicken wings) '(5 hamburgers 2 pieces fried chicken and light duckling wings))
+(subset? '(4 pounds of horseradish) '(four pounds chicken and 5 ounces horseradish))
+
+
+;(define eqset?
+;  (lambda (set1 set2)
+;    (cond
+;      ((subset? set1 set2) (subset? set2 set1))
+;      (else #f))))
+
+(define eqset?
+  (lambda (set1 set2)
+    (and  (subset? set1 set2) (subset? set2 set1))))
+
+(eqset? '(6 large chickens with wings) '(6 chickens with large wings))
+
+(define intersect?
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) #f)
+      ((member? (car set1) set2) #t)
+      (else (intersect (cdr set1) set2)))))
+
+; left off at top of 115
