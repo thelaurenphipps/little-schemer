@@ -519,12 +519,41 @@
 ;      ((null? rel) (quote()))
 ;      (else (cons (cons (second-ref (car rel)) (cons (first-ref (car rel)) (quote()))) (revrel (cdr rel)))))))
 
+;(define revrel
+;  (lambda (rel)
+;    (cond
+;      ((null? rel) (quote()))
+;      (else (cons (build (second-ref (car rel)) (first-ref (car rel))) (revrel (cdr rel)))))))
+
+(define revpair
+  (lambda (pair)
+    (build (second pair) (first pair))))
+
 (define revrel
   (lambda (rel)
     (cond
       ((null? rel) (quote()))
-      (else (cons (build (second-ref (car rel)) (first-ref (car rel))) (revrel (cdr rel)))))))
+      (else (cons (revpair (car rel)) (revrel (cdr rel)))))))
 
- (revrel '((d 4) (b 0) (b 9) (e 5) (g 4)))
+(revrel '((d 4) (b 0) (b 9) (e 5) (g 4)))
 
-; stopped 120
+(define seconds
+  (lambda (l)
+    (cond
+      ((null? l) (quote()))
+      (else (cons (car (cdr (car l))) (seconds (cdr l)))))))
+
+(seconds '((d 4) (b 0) (b 9) (e 5) (g 4)))
+
+(define fullfun?
+  (lambda (fun)
+    (set? (seconds fun))))
+
+(fullfun? '((grape raisin) (plum prune) (stewed prune)))
+(fullfun? '((grape raisin) (plum prune) (stewed grape)))
+
+(define one-to-one?
+  (lambda (fun)
+    (fun? (revrel fun))))
+
+(one-to-one? '((chocolate chip) (doughy cookie)))

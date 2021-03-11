@@ -422,11 +422,109 @@
 
 (eqset? '(6 large chickens with wings) '(6 chickens with large wings))
 
+;(define intersect?
+;  (lambda (set1 set2)
+;    (cond
+;      ((null? set1) #f)
+;      ((member? (car set1) set2) #t)
+;      (else (intersect (cdr set1) set2)))))
+
+; left off at top of 115
+
 (define intersect?
   (lambda (set1 set2)
     (cond
       ((null? set1) #f)
-      ((member? (car set1) set2) #t)
+      (else (or (member? (car set1) set2) (intersect? (cdr set1) set2))))))
+
+(intersect? '(stewed tomatoes and macaroni) '(macaroni and cheese))
+
+(define intersect
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) (quote ()))
+      ((member? (car set1) set2) (cons (car set1) (intersect (cdr set1) set2)))
       (else (intersect (cdr set1) set2)))))
 
-; left off at top of 115
+(intersect '(stewed tomatoes and macaroni) '(macaroni and cheese))
+
+(define union
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) set2)
+      ((member? (car set1) set2) (union (cdr set1) set2))
+      (else (cons (car set1) (union (cdr set1) set2))))))
+
+(union '(stewed tomatoes and macaroni casserole) '(macaroni and cheese))
+(union '(macaroni and cheese) '(stewed tomatoes and macaroni casserole))
+
+(define difference
+  (lambda (set1 set2)
+    (cond
+      ((null? set1) (quote()))
+      ((member? (car set1) set2) (difference (cdr set1) set2))
+      (else (cons (car set1) (difference (cdr set1) set2))))))
+
+(difference '(stewed tomatoes and macaroni casserole) '(macaroni and cheese))
+(difference '(macaroni and cheese) '(stewed tomatoes and macaroni casserole))
+
+(define intersectall
+  (lambda (l-set)
+    (cond
+      ((null? (cdr l-set)) (car l-set))
+      (else (intersect (car l-set) (intersectall (cdr l-set)))))))
+
+(intersectall '((6 pears and) (3 peaches and 6 peppers) (8 pears and 6 plums) (and 6 prunes with some apples)))
+
+(define a-pair?
+  (lambda (expr)
+    (cond
+      ((atom? expr) #f) ; can't NOT be a list of things
+      ((null? expr) #f)
+      ((null? (cdr expr)) #f) ; can't have only one element in the list
+      ((null? (cdr (cdr expr))) #t) ; only has two elements
+      (else #f))))
+
+(a-pair? '(pear pear))
+(a-pair? '(pear pear pear))
+(a-pair? '((2) (pair)))
+(a-pair? '(full (house)))
+
+(define first-ref
+  (lambda (p)
+    (car p)))
+
+(define second-ref
+  (lambda (p)
+    (car (cdr p))))
+
+(define build
+  (lambda (s1 s2)
+    (cons s1 (cons s2 (quote())))))
+
+(define third
+  (lambda (l)
+    (car (cdr (cdr l)))))
+
+(define fun?
+  (lambda (rel)
+    (set? (firsts rel))))
+
+(fun? '((8 3) (4 2) (7 6) (6 2) (3 4)))
+(fun? '((d 4) (b 0) (b 9) (e 5) (g 4)))
+
+;(define revrel
+;  (lambda (rel)
+;    (cond
+;      ((null? rel) (quote()))
+;      (else (cons (cons (second-ref (car rel)) (cons (first-ref (car rel)) (quote()))) (revrel (cdr rel)))))))
+
+(define revrel
+  (lambda (rel)
+    (cond
+      ((null? rel) (quote()))
+      (else (cons (build (second-ref (car rel)) (first-ref (car rel))) (revrel (cdr rel)))))))
+
+ (revrel '((d 4) (b 0) (b 9) (e 5) (g 4)))
+
+; stopped 120
