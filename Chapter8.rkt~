@@ -46,19 +46,19 @@
       ((eq? (car lat) old) (cons old (cons new (cdr lat))) )
       (else (cons (car lat) (insertR new old (cdr lat)))))))
 
-;(define insertL
-;  (lambda (new old lat)
-;    (cond
-;      ((null? lat) (quote()))
-;      ((eq? (car lat) old) (cons new (cons old (cdr lat)))) ;this could have been ((eq? (car lat) old) (cons new lat))
-;      (else (cons (car lat) (insertL new old (cdr lat)))))))
+(define insertL
+  (lambda (new old lat)
+    (cond
+      ((null? lat) (quote()))
+      ((eq? (car lat) old) (cons new (cons old (cdr lat)))) ;this could have been ((eq? (car lat) old) (cons new lat))
+      (else (cons (car lat) (insertL new old (cdr lat)))))))
 
-;(define subst
-;  (lambda (new old lat)
-;    (cond
-;      ((null? lat) (quote()))
-;      ((eq? (car lat) old) (cons new (cdr lat)))
-;      (else (cons (car lat) (subst new old (cdr lat)))))))
+(define subst
+  (lambda (new old lat)
+    (cond
+      ((null? lat) (quote()))
+      ((eq? (car lat) old) (cons new (cdr lat)))
+      (else (cons (car lat) (subst new old (cdr lat)))))))
 
 (define subst2
   (lambda (new o1 o2 lat)
@@ -553,40 +553,13 @@
 ;      ((eq? (car lat) old) (cons new (cons old (cdr lat)))) ;this could have been ((eq? (car lat) old) (cons new lat))
 ;      (else (cons (car lat) (insertL new old (cdr lat)))))))
 
-(define seqL
-  (lambda (new old l)
-    (cons new (cons old l))))
-
-(define seqR
-  (lambda (new old l)
-    (cons old (cons new l))))
-
-; order is one of (cons old (cons new ...)) and (cons new (cons old ...))
-; test? is equal? or eq? or ...
-; new is the element to insert, old is the element that triggers the insert, lat is the list of elements to operate on
-
 (define insert-g
   (lambda (order)
+    (lambda (test?)
       (lambda (new old lat)
         (cond
           ((null? lat) (quote()))
-          ((eq? (car lat) old) (order new old (cdr lat)))
-          (else (cons (car lat) ((insert-g order) new old (cdr lat))))))))
-        
-;((insert-g seqL) 1 2 '(1 2 3))
+          ((test? (car lat) old) (order (new old lat)))
+          (else (cons (car lat) (((insert-g order) test?) new old lat))))))))
 
 
-;(define insertL (insert-g seqL))
-;(define insertR (insert-g seqR))
-
-(define insertL
-  (insert-g
-   (lambda (new old l)
-     (cons new (cons old l)))))
-
-(define insertR
-  (insert-g
-   (lambda (new old l)
-     (cons old (cons new l)))))
-
-; stopped at bottom of page 132
