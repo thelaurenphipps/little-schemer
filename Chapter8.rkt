@@ -39,12 +39,12 @@
       ((null? l) (quote()))
       (else (cons (car (car l)) (firsts (cdr l)))))))
 
-(define insertR
-  (lambda (new old lat)
-    (cond
-      ((null? lat) (quote()))
-      ((eq? (car lat) old) (cons old (cons new (cdr lat))) )
-      (else (cons (car lat) (insertR new old (cdr lat)))))))
+;(define insertR
+;  (lambda (new old lat)
+;    (cond
+;      ((null? lat) (quote()))
+;      ((eq? (car lat) old) (cons old (cons new (cdr lat))) )
+;      (else (cons (car lat) (insertR new old (cdr lat)))))))
 
 ;(define insertL
 ;  (lambda (new old lat)
@@ -60,12 +60,12 @@
 ;      ((eq? (car lat) old) (cons new (cdr lat)))
 ;      (else (cons (car lat) (subst new old (cdr lat)))))))
 
-(define subst2
-  (lambda (new o1 o2 lat)
-    (cond
-      ((null? lat) (quote()))
-      ((or (eq? (car lat) o1) (eq? (car lat) o2)) (cons new (cdr lat)))
-      (else (cons (car lat) (subst2 new o1 o2 (cdr lat)))))))
+;(define subst2
+;  (lambda (new o1 o2 lat)
+;    (cond
+;      ((null? lat) (quote()))
+;      ((or (eq? (car lat) o1) (eq? (car lat) o2)) (cons new (cdr lat)))
+;      (else (cons (car lat) (subst2 new o1 o2 (cdr lat)))))))
 
 (define multirember
   (lambda (a lat)
@@ -325,13 +325,13 @@
     (car exp)))
 
 ; rewrite value with these new helper methods
-(define value
-  (lambda (exp)
-    (cond
-      ((atom? exp) exp)
-      ((eq? (pre-operator exp) '+) (+ (pre-first-sub-exp exp) (second-sub-exp exp)))
-      ((eq? (pre-operator exp) '*) (* (pre-first-sub-exp exp) (second-sub-exp exp)))
-      (else (expt (pre-first-sub-exp exp) (second-sub-exp exp))))))
+;(define value
+;  (lambda (exp)
+;    (cond
+;      ((atom? exp) exp)
+;      ((eq? (pre-operator exp) '+) (+ (pre-first-sub-exp exp) (second-sub-exp exp)))
+;      ((eq? (pre-operator exp) '*) (* (pre-first-sub-exp exp) (second-sub-exp exp)))
+;      (else (expt (pre-first-sub-exp exp) (second-sub-exp exp))))))
 
 ; use this value function for the first representatio of arithmetic expressions
 ; answer: change the definitions of first-sub-exp and operator to be reversed for inline evaluation
@@ -589,4 +589,143 @@
    (lambda (new old l)
      (cons old (cons new l)))))
 
-; stopped at bottom of page 132
+(define seqS
+  (lambda (new old l)
+    (cons new l))) ; l is cdr l when used in the context of insert-g
+
+(define subst(insert-g seqS))
+
+(define seqrem
+  (lambda (new old l)
+    l))
+
+(define yyy
+  (lambda (a l)
+    ((insert-g seqrem) #f a l)))
+
+(yyy 'sausage '(pizza with sausage and bacon))
+
+
+(define atom-to-function
+  (lambda (x)
+    (cond
+      ((eq? x '+) +)
+      ((eq? x '*) *)
+      (else exp))))
+
+(atom-to-function (pre-operator '(+ 5 3)))
+
+
+;(define value
+;  (lambda (exp)
+;    (cond
+;      ((atom? exp) exp)
+;      ((eq? (pre-operator exp) '+) (+ (pre-first-sub-exp exp) (second-sub-exp exp)))
+;      ((eq? (pre-operator exp) '*) (* (pre-first-sub-exp exp) (second-sub-exp exp)))
+;      (else (expt (pre-first-sub-exp exp) (second-sub-exp exp))))))
+
+(define value
+  (lambda (nexp)
+    (cond
+     ((atom? nexp) nexp)
+     (else ((atom-to-function (pre-operator nexp)) (value (pre-first-sub-exp nexp)) (value (second-sub-exp nexp)))))))
+
+(value '(+ 5 3))
+
+
+;(define multirember
+;  (lambda (a lat)
+;    (cond
+;      ((null? lat) (quote()))
+;      ((eq? (car lat) a) (multirember a (cdr lat)))
+;      (else (cons (car lat) (multirember a (cdr lat)))))))
+
+(define multirember-f
+  (lambda (test?)
+    (lambda (a lat)
+      (cond
+        ((null? lat) (quote()))
+        ((test? (car lat) a) ((multirember-f test?) a (cdr lat)))
+        (else (cons (car lat) ((multirember-f test?) a (cdr lat))))))))
+
+((multirember-f eq?) 'tuna '(shrimp salad tuna salad and tuna))
+
+(define multirember-eq?
+  (multirember-f eq?))
+
+(define eq?-tuna
+  (eq?-c 'tuna))
+
+(define multiremberT
+  (lambda (test? lat)
+    (cond
+      ((null? lat) (quote()))
+      ((test? (car lat)) (multiremberT test? (cdr lat)))
+      (else (cons (car lat) (multiremberT test? (cdr lat)))))))
+
+(multiremberT eq?-tuna '(shrimp salad tuna salad and tuna))
+
+(define multirember&co
+  (lambda (a lat col)
+    (cond
+      ((null? lat) (col (quote()) (quote())))
+      ((eq? (car lat) a) (multirember&co a (cdr lat) (lambda (newlat seen) (col newlat (cons (car lat) seen)))))
+      (else (multirember&co a (cdr lat) (lambda (newlat seen) (col (cons (car lat) newlat) seen)))))))
+
+
+(define a-friend
+  (lambda (x y)
+    (null? y)))
+
+;(define new-friend
+;  (lambda (newlat seen)
+;    (col newlat
+;         (cons (car lat) seen))))
+
+(define new-friend
+  (lambda (newlat seen)
+    (a-friend newlat
+              (cons (quote tuna) seen))))
+
+(multirember&co 'tuna '() a-friend)
+(multirember&co 'tuna '(tuna) a-friend)
+(multirember&co 'tuna '(strawberries tuna and swordfish) a-friend)
+(multirember&co 'tuna '(and test) a-friend)
+
+(define last-friend
+  (lambda (x y)
+    (length x)))
+
+(multirember&co (quote tuna) '(strawberries tuna and swordfish) last-friend)
+(multirember&co '(quote tuna) '(strawberries tuna and swordfish) last-friend)
+(multirember&co 'tuna '(strawberries tuna and swordfish) last-friend)
+(multirember&co '(quote tuna) '(strawberries (quote tuna) and swordfish) last-friend)
+(multirember&co '(quote tuna) '(strawberries '(quote tuna) and swordfish) last-friend)
+
+(define multiinsertLR
+  (lambda ( new oldL oldR lat)
+    (cond
+      ((null? lat) (quote()))
+      ((eq? (car lat) oldL) (cons new (cons oldL (multiinsertLR new oldL oldR (cdr lat)))))
+      ((eq? (car lat) oldR) (cons oldR (cons new (multiinsertLR new oldL oldR (cdr lat)))))
+      (else (cons (car lat) (multiinsertLR new oldL oldR (cdr lat)))))))
+
+(define multiinsertLR&co
+  (lambda ( new oldL oldR lat col)
+    (cond
+      ((null? lat) (col (quote()) 0 0))
+      ((eq? (car lat) oldL) (multiinsertLR&co new oldL oldR (cdr lat) (lambda (newlat L R) (col (cons new (cons oldL newlat)) (add1 L) R))))
+      ((eq? (car lat) oldR) (multiinsertLR&co new oldL oldR (cdr lat) (lambda (newlat L R) (col (cons oldR (cons new newlat)) L (add1 R)))))
+      (else (cons (car lat) (multiinsertLR&co new oldL oldR (cdr lat) (lambda (newlat L R) (col (cons (car lat) newlat) L R) )))))))
+
+(define even?
+  (lambda (n)
+    (= (modulo n 2) 0)))
+
+; p144 start next time
+
+;(define evens-only*
+;  (lambda (l)
+;    (cond
+;      ((null? l) (quote()))
+;      ((atom? (car l)) (even? (car l))
