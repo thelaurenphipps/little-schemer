@@ -665,7 +665,6 @@
 
 (multiremberT eq?-tuna '(shrimp salad tuna salad and tuna))
 
-; not sure what this does yet... sounds like we'll get back to it though... p 137
 (define multirember&co
   (lambda (a lat col)
     (cond
@@ -673,8 +672,60 @@
       ((eq? (car lat) a) (multirember&co a (cdr lat) (lambda (newlat seen) (col newlat (cons (car lat) seen)))))
       (else (multirember&co a (cdr lat) (lambda (newlat seen) (col (cons (car lat) newlat) seen)))))))
 
+
 (define a-friend
   (lambda (x y)
     (null? y)))
 
-; leaving off at the bottom of 137
+;(define new-friend
+;  (lambda (newlat seen)
+;    (col newlat
+;         (cons (car lat) seen))))
+
+(define new-friend
+  (lambda (newlat seen)
+    (a-friend newlat
+              (cons (quote tuna) seen))))
+
+(multirember&co 'tuna '() a-friend)
+(multirember&co 'tuna '(tuna) a-friend)
+(multirember&co 'tuna '(strawberries tuna and swordfish) a-friend)
+(multirember&co 'tuna '(and test) a-friend)
+
+(define last-friend
+  (lambda (x y)
+    (length x)))
+
+(multirember&co (quote tuna) '(strawberries tuna and swordfish) last-friend)
+(multirember&co '(quote tuna) '(strawberries tuna and swordfish) last-friend)
+(multirember&co 'tuna '(strawberries tuna and swordfish) last-friend)
+(multirember&co '(quote tuna) '(strawberries (quote tuna) and swordfish) last-friend)
+(multirember&co '(quote tuna) '(strawberries '(quote tuna) and swordfish) last-friend)
+
+(define multiinsertLR
+  (lambda ( new oldL oldR lat)
+    (cond
+      ((null? lat) (quote()))
+      ((eq? (car lat) oldL) (cons new (cons oldL (multiinsertLR new oldL oldR (cdr lat)))))
+      ((eq? (car lat) oldR) (cons oldR (cons new (multiinsertLR new oldL oldR (cdr lat)))))
+      (else (cons (car lat) (multiinsertLR new oldL oldR (cdr lat)))))))
+
+(define multiinsertLR&co
+  (lambda ( new oldL oldR lat col)
+    (cond
+      ((null? lat) (col (quote()) 0 0))
+      ((eq? (car lat) oldL) (multiinsertLR&co new oldL oldR (cdr lat) (lambda (newlat L R) (col (cons new (cons oldL newlat)) (add1 L) R))))
+      ((eq? (car lat) oldR) (multiinsertLR&co new oldL oldR (cdr lat) (lambda (newlat L R) (col (cons oldR (cons new newlat)) L (add1 R)))))
+      (else (cons (car lat) (multiinsertLR&co new oldL oldR (cdr lat) (lambda (newlat L R) (col (cons (car lat) newlat) L R) )))))))
+
+(define even?
+  (lambda (n)
+    (= (modulo n 2) 0)))
+
+; p144 start next time
+
+;(define evens-only*
+;  (lambda (l)
+;    (cond
+;      ((null? l) (quote()))
+;      ((atom? (car l)) (even? (car l))
